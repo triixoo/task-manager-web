@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#193d36" />
+    <meta
+      name="description"
+      content="A task workspace for your team. Plan work, assign owners, and track progress. Your data stays in your browser."
+    />
+    <title>Task Manager · Project workspace</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="task-manager.js"></script>
+    <script defer src="boot.js"></script>
+  </head>
+  <body>
+    <svg
+      class="icon-definitions"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="i-grid" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </symbol>
+        <symbol id="i-team" viewBox="0 0 24 24">
+          <circle cx="9" cy="8" r="3" />
+          <path
+            d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"
+          />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6" />
+        </symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M12 4v12m-5-5 5 5 5-5M4 17v4h16v-4" />
+        </symbol>
+        <symbol id="i-help" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 16v.1" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </symbol>
+        <symbol id="i-list" viewBox="0 0 24 24">
+          <path d="M9 5h11M9 12h11M9 19h11M3 5h1M3 12h1M3 19h1" />
+        </symbol>
+      </defs>
+    </svg>
+    <div id="loading" class="loading" role="status">
+      <span class="brand-mark">✓</span>
+      <h1>Opening your workspace</h1>
+      <p id="loading-message">Just a moment…</p>
+      <noscript
+        >This application needs JavaScript enabled to run its compiled Java
+        code.</noscript
+      >
+    </div>
+    <div id="app" class="app-shell" hidden>
+      <aside class="sidebar" aria-label="Workspace navigation">
+        <a class="brand" href="./"
+          ><span class="brand-mark">✓</span
+          ><span>Task Manager<span class="brand-dot">.</span></span></a
+        >
+        <div class="workspace-label">TEAM WORKSPACE</div>
+        <nav class="primary-nav">
+          <button id="overview-button" class="nav-item selected">
+            <svg><use href="#i-grid" /></svg><span>Overview</span
+            ><span id="sidebar-count" class="nav-count">0</span>
+          </button>
+          <button id="team-button" class="nav-item">
+            <svg><use href="#i-team" /></svg><span>Team members</span>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <section class="progress-card" aria-label="Overall completion">
+            <div>
+              <span>Project progress</span><strong id="completion">0%</strong>
+            </div>
+            <div class="progress-track"><div id="completion-bar"></div></div>
+            <p>A little progress, every day.</p>
+          </section>
+          <button id="export-backup" class="nav-item">
+            <svg><use href="#i-arrow" /></svg><span>Export backup</span>
+          </button>
+          <button id="import-backup" class="nav-item">
+            <svg class="rotate"><use href="#i-arrow" /></svg
+            ><span>Import backup</span>
+          </button>
+          <button id="help-button" class="nav-item">
+            <svg><use href="#i-help" /></svg><span>Workspace help</span>
+          </button>
+          <div class="local-note"><span></span>Saved in this browser</div>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div class="breadcrumb">
+            Workspace <span>/</span> <strong>Overview</strong>
+          </div>
+          <button id="team-top" class="team-top">
+            <span id="team-avatars" class="avatar-stack"></span
+            ><span id="team-count">0 members</span
+            ><svg><use href="#i-plus" /></svg>
+          </button>
+        </header>
+        <div class="main-content">
+          <div id="recovery-banner" class="recovery-banner" role="alert" hidden>
+            <strong>Your saved workspace could not be opened.</strong>
+            <p>
+              Your original data is preserved. Download a recovery copy before
+              importing a valid backup or resetting.
+            </p>
+            <button id="recovery-export">Download recovery copy</button
+            ><button id="recovery-reset">Reset workspace</button>
+          </div>
+          <section class="page-heading">
+            <div>
+              <p id="today" class="eyebrow"></p>
+              <h1>Project overview</h1>
+              <p>Keep the work organized. Make the next step clear.</p>
+            </div>
+            <button id="new-task" class="button primary">
+              <svg><use href="#i-plus" /></svg>New task
+            </button>
+          </section>
+          <section class="metrics" aria-label="Project summary">
+            <div class="metric">
+              <span class="metric-icon"
+                ><svg><use href="#i-list" /></svg></span
+              ><span class="metric-label">Total tasks</span
+              ><strong id="total-count">0</strong
+              ><span class="metric-detail">Across the workspace</span>
+            </div>
+            <div class="metric">
+              <span class="metric-icon blue"
+                ><svg><use href="#i-clock" /></svg></span
+              ><span class="metric-label">In progress</span
+              ><strong id="active-count">0</strong
+              ><span class="metric-detail">Work moving forward</span>
+            </div>
+            <div class="metric">
+              <span class="metric-icon green"
+                ><svg><use href="#i-check" /></svg></span
+              ><span class="metric-label">Completed</span
+              ><strong id="done-count">0</strong
+              ><span class="metric-detail">One step closer</span>
+            </div>
+            <div class="metric">
+              <span class="metric-icon orange"
+                ><svg><use href="#i-clock" /></svg></span
+              ><span class="metric-label">Overdue</span
+              ><strong id="overdue-count">0</strong
+              ><span class="metric-detail">Needs your attention</span>
+            </div>
+          </section>
+          <section class="tasks-panel" aria-label="Tasks">
+            <div class="panel-heading">
+              <h2>Your tasks <span id="result-count">0 tasks</span></h2>
+              <span class="sort-note">Priority first, then due date</span>
+            </div>
+            <div
+              id="status-tabs"
+              class="status-tabs"
+              role="group"
+              aria-label="Filter by status"
+            >
+              <button class="active" data-status="" aria-pressed="true">
+                All tasks <span id="tab-all-count">0</span></button
+              ><button data-status="TODO" aria-pressed="false">
+                To do <span id="tab-todo-count">0</span></button
+              ><button data-status="IN_PROGRESS" aria-pressed="false">
+                In progress <span id="tab-progress-count">0</span></button
+              ><button data-status="DONE" aria-pressed="false">
+                Done <span id="tab-done-count">0</span>
+              </button>
+            </div>
+            <div class="filters">
+              <label class="search-box"
+                ><svg><use href="#i-search" /></svg
+                ><input
+                  id="search"
+                  type="search"
+                  placeholder="Search tasks…"
+                  aria-label="Search tasks" /></label
+              ><select id="priority-filter" aria-label="Filter by priority">
+                <option value="">All priorities</option>
+                <option value="HIGH">High priority</option>
+                <option value="MEDIUM">Medium priority</option>
+                <option value="LOW">Low priority</option></select
+              ><select id="owner-filter" aria-label="Filter by assignee">
+                <option value="">All assignees</option></select
+              ><button
+                id="overdue-toggle"
+                class="filter-button"
+                aria-pressed="false"
+              >
+                Overdue</button
+              ><button id="clear-filters" class="clear-button">Clear</button>
+            </div>
+            <div id="table-heading" class="table-heading" aria-hidden="true">
+              <span>Task</span><span>Status</span><span>Assignee</span
+              ><span>Due date</span><span>Actions</span>
+            </div>
+            <div id="task-list" aria-label="Task list"></div>
+            <div id="empty-state" class="empty-state">
+              <span class="empty-icon"
+                ><svg><use href="#i-list" /></svg
+              ></span>
+              <h3 id="empty-title">A fresh start for your next project</h3>
+              <p id="empty-description">
+                Add your first task, or explore a sample project with your team.
+              </p>
+              <div>
+                <button id="empty-create" class="button primary">
+                  Create a task</button
+                ><button id="empty-demo" class="button secondary">
+                  Load sample project</button
+                ><button id="empty-clear" class="button secondary" hidden>
+                  Clear filters
+                </button>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <span
+                ><span class="save-dot"></span>Changes save automatically on
+                this device</span
+              ><span>Private to your browser</span>
+            </div>
+          </section>
+          <footer class="page-footer">
+            <span>Task Manager · Group project</span
+            ><span>Karaul Shyngys &amp; Daniar Aitanov</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+    <dialog id="task-dialog" aria-labelledby="task-dialog-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">A CLEAR NEXT STEP</p>
+          <h2 id="task-dialog-title">Create a task</h2>
+        </div>
+        <button
+          id="close-task"
+          class="icon-button"
+          aria-label="Close task form"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <form id="task-form">
+        <label
+          >Task title <span class="required">*</span
+          ><input
+            id="task-title"
+            maxlength="100"
+            required
+            placeholder="What needs to get done?"
+            autocomplete="off" /></label
+        ><label
+          >Description <span class="optional">Optional</span
+          ><textarea
+            id="task-description"
+            maxlength="1000"
+            rows="3"
+            placeholder="Add a little context for your team"
+          ></textarea>
+        </label>
+        <div class="form-columns">
+          <label
+            >Priority<select id="task-priority">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="HIGH">High</option>
+            </select></label
+          ><label
+            >Due date <span class="optional">Optional</span
+            ><input id="task-date" type="date" /></label
+          ><label
+            >Assignee<select id="task-owner">
+              <option value="">Unassigned</option>
+            </select></label
+          ><label
+            >Status<select id="task-status">
+              <option value="TODO">To do</option>
+            </select></label
+          >
+        </div>
+        <p class="field-hint">
+          Assign an owner before starting work. Completed tasks can be reopened
+          as To do.
+        </p>
+        <p id="task-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="delete-task" type="button" class="text-danger" hidden>
+            Delete task
+          </button>
+          <div class="push-right">
+            <button id="cancel-task" type="button" class="button secondary">
+              Cancel</button
+            ><button id="save-task" type="submit" class="button primary">
+              Create task
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="team-dialog" aria-labelledby="team-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">BETTER TOGETHER</p>
+          <h2 id="team-title">Team members</h2>
+        </div>
+        <button
+          id="close-team"
+          class="icon-button"
+          aria-label="Close team members"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <p class="dialog-copy">
+        Add the people responsible for your tasks. These are task owners, not
+        login accounts.
+      </p>
+      <div id="members-list"></div>
+      <form id="member-form" class="member-form">
+        <label for="member-name">New team member</label>
+        <div>
+          <input
+            id="member-name"
+            maxlength="60"
+            required
+            placeholder="Full name"
+            autocomplete="off"
+          /><button type="submit" class="button primary">Add member</button>
+        </div>
+        <p id="member-error" class="form-error" role="alert"></p>
+      </form>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">YOUR WORKSPACE</p>
+          <h2 id="help-title">A few useful things</h2>
+        </div>
+        <button
+          id="close-help"
+          class="icon-button"
+          aria-label="Close workspace help"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="help-content">
+        <h3>Your data stays here</h3>
+        <p>
+          Tasks save automatically in this browser. Other devices and browsers
+          have separate workspaces. Export a backup before clearing browser
+          data.
+        </p>
+        <h3>A simple workflow</h3>
+        <p>
+          Create a task, assign an owner, then start it. Complete it when the
+          work is done. Reopen completed tasks as To do. Tasks due today are not
+          overdue.
+        </p>
+        <h3>Try a sample project</h3>
+        <p>Explore an editable example with five tasks and two team members.</p>
+        <button id="load-sample" class="button secondary">
+          Load sample project
+        </button>
+        <h3>About the project</h3>
+        <p>
+          The task rules and interface controller are written in Java. TeaVM
+          compiles them for your browser. Backups use the same .properties
+          format as the console app.
+        </p>
+        <div class="help-bottom">
+          <button id="reload" class="button secondary">Reload workspace</button
+          ><button id="reset-workspace" class="text-danger">
+            Clear workspace
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <input
+      id="import-file"
+      type="file"
+      accept=".properties,text/plain"
+      hidden
+    />
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+      <span id="toast-message"></span
+      ><button
+        id="dismiss-toast"
+        class="icon-button"
+        aria-label="Dismiss notification"
+      >
+        <svg><use href="#i-close" /></svg>
+      </button>
+    </div>
+  </body>
+</html>
